@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, History, GitCompare, Settings, Menu, X, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, History, GitCompare, Menu, X, ChevronDown } from 'lucide-react';
 import logoSafetemp from '../../assets/logost.png';
 import { useAuth } from '../../contexts/auth/authContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -16,7 +16,6 @@ const linksNavegacao = [
   { nome: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { nome: 'Histórico', path: '/historico', icon: History },
   { nome: 'Comparações', path: '/historico/comparar', icon: GitCompare },
-  { nome: 'Configurações', path: '/config', icon: Settings },
 ];
 
 const Navbar = () => {
@@ -59,12 +58,8 @@ const Navbar = () => {
 
  const handleMarkAsRead = async () => {
   try {
- 
-    const response = await api.patch('/notifications/read');
-    console.log('Status:', response.status); 
-
+    await api.patch('/notifications/read');
     setNotifications([]);
-
   } catch (error) {
     console.error("Erro ao marcar notificações como lidas:", error);
   }

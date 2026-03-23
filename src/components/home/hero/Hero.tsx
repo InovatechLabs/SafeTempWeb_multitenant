@@ -4,14 +4,20 @@ import { motion } from 'framer-motion';
 import DashboardCard from '../infoCard/Card';
 
 const Hero = () => {
+
+  const handleExploreClick = () => {
+  const featuresSection = document.getElementById('features');
+  featuresSection?.scrollIntoView({ behavior: 'smooth' });
+};
+
+
   return (
     <>
-    <Navbar />
-    <section className="relative w-full min-h-[100vh] flex items-center justify-center bg-gradient-to-b from-white to-gray-50 overflow-hidden pt-28 md:pt-32">
+      <Navbar />
+      <section className="relative w-full min-h-[100vh] flex items-center justify-center bg-gradient-to-b from-white to-gray-50 overflow-hidden pt-28 md:pt-32">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center mb-8">
 
-      <div className="max-w-8xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-24 items-center mb-8">
-        
-      <motion.div
+          <motion.div
             className="w-full text-center lg:text-left"
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -45,18 +51,15 @@ const Hero = () => {
             </motion.p>
 
             <div className="mt-8 flex justify-center lg:justify-start flex-wrap gap-4">
-              <button className="group flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-brand-purple text-white font-bold rounded-2xl shadow-xl shadow-brand-purple/20 hover:scale-105 cursor-pointer transition-all">
+              <button onClick={handleExploreClick} className="group flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-brand-purple text-white font-bold rounded-2xl shadow-xl shadow-brand-purple/20 hover:scale-105 cursor-pointer transition-all">
                 Explorar
-                <ArrowRight
-                  size={20}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </motion.div>
 
           <div className="relative flex justify-center items-center mt-10 lg:mt-0">
-            <div className="flex items-center justify-center z-20 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-none transform hover:scale-[1.02] transition-transform duration-500">
+            <div className="relative flex items-center justify-center z-10 w-full max-w-[420px] sm:max-w-[500px] lg:max-w-none transform hover:scale-[1.02] transition-transform duration-500">
               <DashboardCard />
             </div>
           </div>

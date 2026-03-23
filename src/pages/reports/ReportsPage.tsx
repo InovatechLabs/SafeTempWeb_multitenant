@@ -168,7 +168,6 @@ const handleShare = async (id: number) => {
         </h2>
         
         <form onSubmit={handleSearch} className="space-y-3">
-          {/* GRID: Agora ele vira 1 coluna abaixo de 500px para não vazar */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Início</label>
@@ -228,69 +227,81 @@ const handleShare = async (id: number) => {
           </div>
         </aside>
 
-      {/* ÁREA DE VISUALIZAÇÃO (70%) */}
-     <main className="w-full xl:flex-1 bg-[#f8f9fc] relative order-3 xl:order-2">
-  <AnimatePresence mode="wait">
-    {selectedReport ? (
-      <motion.div
-        key={selectedReport.id + viewMode} 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className="max-w-4xl mx-auto space-y-8"
-      >
-        <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
-          <div className="flex justify-between items-start mb-2 border-b border-gray-50 pb-8">
-            <h2 className="text-3xl font-black text-gray-900 leading-tight">Visualizar Relatório</h2>
+      <main className="w-full xl:flex-1 bg-[#f8f9fc] relative order-3 xl:order-2 flex flex-col px-3 sm:px-6 xl:px-8  overflow-x-hidden">
+            <AnimatePresence mode="wait">
+              {selectedReport ? (
+           <motion.div
+  key={selectedReport.id + viewMode}
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -10 }}
+  className="w-full space-y-8"
+>
+                  <div className="bg-white p-5 sm:p-8 md:p-10 rounded-[2rem] sm:rounded-[3rem] shadow-sm border border-gray-100">
+
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-2 border-b border-gray-50 pb-6 md:pb-8">
+                      <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">Visualizar Relatório</h2>
+                    </div>
+
+          {/* Logo + título */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 items-center mb-6">
+            <img src={logost} className="max-w-[40%] sm:max-w-[20%]" alt="Logo" />
+            <h1 className="text-gray-900 uppercase font-normal tracking-[0.15em] sm:tracking-[0.2em] text-center sm:text-right text-xs sm:text-sm">
+              Relatório de Temperatura
+            </h1>
           </div>
-          
-          <div className='flex justify-between gap-2 items-center mb-6'>
-            <img src={logost} className='max-w-[20%]' alt="Logo" />
-            <h1 className='text-gray-900 uppercase font-normal tracking-[0.2em]'>Relatório de Temperatura</h1>
-          </div>
-          
-          <div className='flex flex-col max-w-full px-2 gap-1'>
+
+          {/* Metadados */}
+          <div className="flex flex-col max-w-full px-2 gap-1 text-sm">
             <p><strong>ID Relatório:</strong> {selectedReport.id}</p>
             <p><strong>Gerado em:</strong> {formatToBR(selectedReport.criado_em)}</p>
             <p><strong>Chip ID:</strong> {selectedReport.chip_id}</p>
           </div>
 
-          <div className='h-[1px] bg-[#e7e7e7] mb-8 mt-5'></div>
-          
+          <div className="h-[1px] bg-[#e7e7e7] mb-6 md:mb-8 mt-5" />
+
           {viewMode === 'leitura' ? (
             <div className="animate-in fade-in duration-500">
-              <h1 className='text-gray-900 font-bold text-lg border-l-6 border-[#4A148C] pl-2 mb-6'>Resumo Estatístico</h1>
-              
-              <div className="grid grid-cols-4 gap-4 mb-10">
+              <h1 className="text-gray-900 font-bold text-lg border-l-4 md:border-l-6 border-[#4A148C] pl-2 mb-6">
+                Resumo Estatístico
+              </h1>
+
+              {/* Grid de stats — 2 colunas em mobile, 4 em sm+ */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-10">
                 {[
                   { label: 'Média Geral', val: parseResumo(selectedReport.resumo)?.media.toFixed(2), unit: '°C' },
-                  { label: 'Mínima', val: parseResumo(selectedReport.resumo)?.min, unit: '°C' },
-                  { label: 'Máxima', val: parseResumo(selectedReport.resumo)?.max, unit: '°C' },
-                  { label: 'Registros', val: parseResumo(selectedReport.resumo)?.registros, unit: 'un' }
+                  { label: 'Mínima',      val: parseResumo(selectedReport.resumo)?.min,              unit: '°C' },
+                  { label: 'Máxima',      val: parseResumo(selectedReport.resumo)?.max,              unit: '°C' },
+                  { label: 'Registros',   val: parseResumo(selectedReport.resumo)?.registros,        unit: 'un' },
                 ].map((stat, i) => (
-                  <div key={i} className="bg-gray-50 p-5 rounded-3xl border border-gray-100">
+                  <div key={i} className="bg-gray-50 p-4 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">{stat.label}</p>
-                    <p className="text-xl font-black text-brand-purple">{stat.val}<span className="text-xs ml-0.5">{stat.unit}</span></p>
+                    <p className="text-lg md:text-xl font-black text-brand-purple">
+                      {stat.val}<span className="text-xs ml-0.5">{stat.unit}</span>
+                    </p>
                   </div>
                 ))}
               </div>
 
-              <div className="prose prose-purple max-w-none mb-10">
-                <div className="whitespace-pre-wrap text-sm text-gray-600 leading-relaxed font-medium bg-gray-50/50 p-8 rounded-3xl border border-dashed border-gray-200">
+              {/* Área do texto do relatório — mais espaçosa e legível */}
+              <div className="prose prose-purple max-w-none mb-8 md:mb-10">
+                <div className="whitespace-pre-wrap text-sm md:text-base text-gray-600 leading-relaxed md:leading-loose font-medium bg-gray-50/80 p-5 sm:p-7 md:p-8 rounded-2xl md:rounded-3xl border border-dashed border-gray-200 min-h-[200px]">
                   {selectedReport.relatorio}
                 </div>
               </div>
             </div>
           ) : (
             <div className="animate-in fade-in duration-500 space-y-8">
-              <h1 className='text-gray-900 font-bold text-lg border-l-6 border-brand-orange pl-2'>Histórico de Telemetria</h1>
-            
-                <ReportDataChart reportId={selectedReport.id} />
-           
+              <h1 className="text-gray-900 font-bold text-lg border-l-4 md:border-l-6 border-brand-orange pl-2">
+                Histórico de Telemetria
+              </h1>
+              <ReportDataChart reportId={selectedReport.id} />
             </div>
           )}
 
-          <div className="flex items-center mt-4 justify-between p-6 bg-white/50 backdrop-blur-sm border border-gray-100 rounded-[2rem] shadow-sm">
+          {/* Exportação — responsiva */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center mt-4 justify-between gap-4 p-4 sm:p-6 bg-white/50 backdrop-blur-sm border border-gray-100 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm">
             <div className="flex flex-col">
               <span className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${viewMode === 'leitura' ? 'text-brand-purple' : 'text-brand-orange'}`}>
                 Gestão de Dados
@@ -298,19 +309,31 @@ const handleShare = async (id: number) => {
               <h3 className="text-sm font-bold text-gray-700">Exportar Resultados</h3>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button onClick={() => handlePDFDownload(selectedReport.id)} disabled={isDownloading.pdf} className="group flex items-center cursor-pointer gap-3 px-6 py-3 bg-[#ff3838] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-all disabled:opacity-50">
-                {isDownloading.pdf ? <LuLoader size={18} className="animate-spin" /> : <LuFileText size={18} />}
+            {/* Botões — wrap em mobile para não vazar */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => handlePDFDownload(selectedReport.id)}
+                disabled={isDownloading.pdf}
+                className="flex-1 sm:flex-none group flex items-center justify-center cursor-pointer gap-2 sm:gap-3 px-4 sm:px-6 py-3 bg-[#ff3838] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-red-500/20 hover:scale-105 transition-all disabled:opacity-50"
+              >
+                {isDownloading.pdf ? <LuLoader size={16} className="animate-spin" /> : <LuFileText size={16} />}
                 <span>PDF</span>
               </button>
-              
-              <button onClick={() => handleCSVDownload(selectedReport.id)} disabled={isDownloading.csv} className="group flex items-center cursor-pointer gap-3 px-6 py-3 bg-[#27ae60] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-green-600/20 hover:scale-105 transition-all disabled:opacity-50">
-                {isDownloading.csv ? <LuLoader size={18} className="animate-spin" /> : <LuDownload size={18} />}
+
+              <button
+                onClick={() => handleCSVDownload(selectedReport.id)}
+                disabled={isDownloading.csv}
+                className="flex-1 sm:flex-none group flex items-center justify-center cursor-pointer gap-2 sm:gap-3 px-4 sm:px-6 py-3 bg-[#27ae60] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-green-600/20 hover:scale-105 transition-all disabled:opacity-50"
+              >
+                {isDownloading.csv ? <LuLoader size={16} className="animate-spin" /> : <LuDownload size={16} />}
                 <span>CSV</span>
               </button>
 
-              <button onClick={() => handleShare(selectedReport.id)} className="flex items-center cursor-pointer justify-center w-12 h-11 bg-[#3498db] text-white rounded-2xl shadow-lg hover:scale-110 transition-all">
-                <LuShare2 size={20} />
+              <button
+                onClick={() => handleShare(selectedReport.id)}
+                className="flex items-center cursor-pointer justify-center w-11 h-11 bg-[#3498db] text-white rounded-2xl shadow-lg hover:scale-110 transition-all shrink-0"
+              >
+                <LuShare2 size={18} />
               </button>
             </div>
           </div>
@@ -318,9 +341,9 @@ const handleShare = async (id: number) => {
         </div>
       </motion.div>
     ) : (
-      <div className="h-full flex flex-col items-center justify-center text-gray-300 mt-15">
+      <div className="h-full flex flex-col items-center justify-center text-gray-300 mt-15 p-8">
         <LuFileText size={64} className="mb-4 opacity-20" />
-        <p className="font-bold text-xl">Selecione um relatório para visualizar</p>
+        <p className="font-bold text-xl text-center">Selecione um relatório para visualizar</p>
       </div>
     )}
   </AnimatePresence>
@@ -336,28 +359,11 @@ const handleShare = async (id: number) => {
         <p className="text-3xl font-black text-gray-800">
     {record?.value ?? "--"}°C 
   </p>
-        <p className="text-[10px] font-bold text-green-500 uppercase">Ambiente Seguro</p>
       </div>
       <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500">
          <LuThermometer size={24} />
       </div>
     </div>
-  </div>
-
-  <div className="bg-[#282735] p-6 rounded-[2.5rem] shadow-2xl text-white">
-    <h3 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-4">
-      IA Insights
-    </h3>
-    <ul className="space-y-4">
-      <li className="flex gap-3 text-xs leading-relaxed">
-        <span className="text-brand-orange">✦</span>
-        A temperatura média subiu 2% em relação ao relatório anterior.
-      </li>
-      <li className="flex gap-3 text-xs leading-relaxed">
-        <span className="text-brand-purple">✦</span>
-        Nenhum outlier crítico foi detectado nesta janela.
-      </li>
-    </ul>
   </div>
 </aside>
     </div>

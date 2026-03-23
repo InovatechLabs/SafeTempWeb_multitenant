@@ -21,7 +21,7 @@ const CommunitySection = () => {
     if(data?.lastRecord) {
       setTotal(data?.lastRecord.id)
     }
-  });
+  }, [data?.lastRecord]);
 
   return (
     <section className="py-24 bg-white overflow-hidden min-h-screen">

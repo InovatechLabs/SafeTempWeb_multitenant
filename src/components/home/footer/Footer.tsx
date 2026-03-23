@@ -1,5 +1,5 @@
 
-import { Github, Linkedin, Mail, ArrowUpCircle } from 'lucide-react';
+import { Github, ArrowUpCircle } from 'lucide-react';
 
 const Footer = () => {
   const scrollToTop = () => {
@@ -41,13 +41,9 @@ const Footer = () => {
             </p>
             <div className="flex gap-4">
               <button className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
+              <a href='https://github.com/gjulianni' target='_blank'>
                 <Github size={20} />
-              </button>
-              <button className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
-                <Linkedin size={20} />
-              </button>
-              <button className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer">
-                <Mail size={20} />
+                </a>
               </button>
             </div>
           </div>
@@ -55,7 +51,7 @@ const Footer = () => {
 
         <div className="pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">
-            © 2026 SafeTemp. Criado para inovação laboratorial.
+            © 2026 SafeTemp
           </p>
           
           <button 

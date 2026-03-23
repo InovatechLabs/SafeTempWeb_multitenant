@@ -4,7 +4,7 @@ import api from '../api';
 export const authService = {
   login: async (credentials: LoginCredentials) => {
     const response = await api.post('user/login', credentials);
-    return response.data;
+    return response;
   },
   
   register: async (userData: RegisterCredentials) => {

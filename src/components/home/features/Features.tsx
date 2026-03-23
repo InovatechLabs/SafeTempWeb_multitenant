@@ -12,7 +12,7 @@ const Features = () => {
   };
 
   return (
-<section className="py-32 bg-gradient-to-b from-white to-gray-50 overflow-hidden min-h-screen flex items-center">
+<section id="features" className="py-32 bg-gradient-to-b from-gray-50 to-white overflow-hidden min-h-screen flex items-center">
   <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
     <div className="flex flex-col lg:flex-row items-center justify-between gap-16 xl:gap-24">
 
@@ -38,7 +38,9 @@ const Features = () => {
     </span>
   </div>
 
-  <button className="group flex items-center gap-3 px-8 py-5 bg-brand-orange text-white font-black rounded-2xl shadow-2xl shadow-brand-orange/30 hover:scale-105 transition-all uppercase text-xs tracking-widest cursor-pointer mx-auto lg:mx-0">
+  <button  
+  onClick={() => window.open(`${import.meta.env.VITE_BACKEND_URL?.replace('/api/', '')}/api/docs`, '_blank')} 
+  className="group flex items-center gap-3 px-8 py-5 bg-brand-orange text-white font-black rounded-2xl shadow-2xl shadow-brand-orange/30 hover:scale-105 transition-all uppercase text-xs tracking-widest cursor-pointer mx-auto lg:mx-0">
     Ver Documentação
     <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
   </button>

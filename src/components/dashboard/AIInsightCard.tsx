@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LuBrainCircuit, LuX, LuSparkles } from 'react-icons/lu';
+import { LuBrainCircuit, LuSparkles } from 'react-icons/lu';
 
 interface AIInsightCardProps {
   text: string;
   onClose: () => void;
 }
 
-export const AIInsightCard = ({ text, onClose }: AIInsightCardProps) => {
+export const AIInsightCard = ({ text }: AIInsightCardProps) => {
   const [displayText, setDisplayText] = useState('');
   const [isFinished, setIsFinished] = useState(false);
 
@@ -34,7 +34,7 @@ export const AIInsightCard = ({ text, onClose }: AIInsightCardProps) => {
       initial={{ opacity: 0, y: -20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="mb-8 bg-gradient-to-br from-brand-purple to-purple-700 p-[1px] rounded-[2rem] shadow-2xl shadow-brand-purple/20"
+      className="mt-25 bg-gradient-to-br from-brand-purple to-purple-700 p-[1px] rounded-[2rem] shadow-2xl shadow-brand-purple/20"
     >
       <div className="bg-white/95 backdrop-blur-xl rounded-[1.95rem] p-6 relative overflow-hidden">
         <LuSparkles className="absolute -right-4 -top-4 text-brand-purple/5 w-24 h-24 rotate-12" />
@@ -51,9 +51,6 @@ export const AIInsightCard = ({ text, onClose }: AIInsightCardProps) => {
               <p className="text-[10px] text-gray-400 font-medium">Llama 3 Intelligent Processor</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-300 hover:text-gray-500 transition-colors">
-            <LuX size={18} />
-          </button>
         </div>
 
         <div className="relative">

@@ -78,13 +78,9 @@ const AdvancedAnalytics = ({ stats, isLoading }: AdvancedAnalyticsProps) => {
         </motion.div>
 
         <motion.div variants={item} className="lg:col-span-5 bg-white p-8 rounded-[3.5rem] border border-gray-100 shadow-sm">
-            <div className="absolute top-0 right-0 p-8 opacity-5 text-brand-orange">
-            <LuSigma size={120} />
-            </div>
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-8 flex items-center gap-2">
             <LuSigma className="text-brand-orange" size={14} /> Variabilidade e Precisão
           </h3>
-          
 
           <div className="grid grid-cols-2 gap-y-10 gap-x-6">
             <div className="space-y-1">
@@ -135,10 +131,10 @@ const AdvancedAnalytics = ({ stats, isLoading }: AdvancedAnalyticsProps) => {
             <div className="space-y-4">
                <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-white/50 uppercase">Anomalias (Outliers)</span>
-                  <span className={`px-2 py-1 rounded-lg text-[10px] font-black ${
+                  <span className={`px-2 py-1 rounded-lg text-[10px] font-white ${
                     (stats?.totalOutliers ?? 0) > 0 
-                    ? 'bg-red-500/20 text-red-400' 
-                    : 'bg-green-500/20 text-green-400'
+                    ? 'bg-red-500/20 text-white-900 font-bold' 
+                    : 'bg-green-500/20 text-white-900'
                     }`}>
                     {stats?.totalOutliers ?? 0} detectados
                 </span>

@@ -1,4 +1,4 @@
-import { LuShieldCheck, LuShieldAlert, LuShieldOff, LuSparkles, LuTag, LuArrowUpRight, LuArrowDownRight } from 'react-icons/lu';
+import { LuSparkles, LuTag, LuArrowUpRight, LuArrowDownRight } from 'react-icons/lu';
 import type { ComparisonResponse } from '../../types/comparison';
 
 type SummaryType = ComparisonResponse['summary'];
@@ -115,59 +115,16 @@ const MetricBlock = ({ label, valB, valA, percentage, isInverse = false }: Metri
 const ComparisonSummaryCard = ({ summary, statisticsA, statisticsB, metrics }: Props) => {
   if (!summary) return null;
 
-  const getConfidenceStyles = (level: 'alta' | 'média' | 'baixa') => {
-    switch (level) {
-      case 'alta':
-        return {
-          color: 'text-green-600',
-          border: 'border-l-green-600',
-          bgColor: 'bg-green-50',
-          icon: <LuShieldCheck size={14} />,
-          label: 'Confiança Alta',
-        };
-      case 'média':
-        return {
-          color: 'text-amber-600',
-          border: 'border-l-amber-600',
-          bgColor: 'bg-amber-50',
-          icon: <LuShieldAlert size={14} />,
-          label: 'Confiança Média',
-        };
-      case 'baixa':
-        return {
-          color: 'text-red-600',
-          border: 'border-l-red-600',
-          bgColor: 'bg-red-50',
-          icon: <LuShieldOff size={14} />,
-          label: 'Confiança Baixa',
-        };
-      default:
-        return {
-          color: 'text-slate-500',
-          border: 'border-l-slate-400',
-          bgColor: 'bg-slate-50',
-          icon: <LuShieldOff size={14} />,
-          label: 'Confiança',
-        };
-    }
-  };
-
-  const config = getConfidenceStyles(summary.confidence);
-
   const hasMetrics = metrics && statisticsA && statisticsB;
 
   return (
-    <div className={`flex bg-white rounded-[2.5rem] border-l-[6px] ${config.border} shadow-xl shadow-slate-200/40 overflow-hidden transition-all hover:shadow-brand-purple/5`}>
-
+   <div className={`flex flex-col lg:flex-row bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 overflow-hidden transition-all hover:shadow-brand-purple/5`}>
       {/* ── Lado esquerdo: conteúdo editorial ── */}
-      <div className={`flex flex-col p-8 ${hasMetrics ? 'flex-1 border-r border-slate-100' : 'w-full'}`}>
+   <div className={`flex flex-col p-6 md:p-8 border-l-[6px] ${hasMetrics ? 'lg:flex-1 lg:border-r border-slate-100' : 'w-full'}`}>
 
-        {/* Header */}
         <div className="flex justify-between items-start mb-6">
-          <h3 className="text-3xl font-black text-slate-800 tracking-tight">Sumário</h3>
-          
+          <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Sumário</h3>
         </div>
-
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-6">
           {summary.tags.map((tag, i) => (
@@ -177,8 +134,7 @@ const ComparisonSummaryCard = ({ summary, statisticsA, statisticsB, metrics }: P
           ))}
         </div>
 
-        {/* Headline */}
-        <p className="text-xl font-extrabold text-slate-800 leading-tight mb-6">
+        <p className="text-lg md:text-xl font-extrabold text-slate-800 leading-tight mb-6">
           {summary.headline}
         </p>
 
@@ -187,13 +143,13 @@ const ComparisonSummaryCard = ({ summary, statisticsA, statisticsB, metrics }: P
           {summary.highlights.map((highlight, i) => (
             <div key={i} className="flex items-start gap-3 group">
               <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-purple shrink-0 group-hover:scale-150 transition-transform" />
-              <p className="text-md text-slate-600 font-medium leading-relaxed">{highlight}</p>
+              <p className="text-sm md:text-md text-slate-600 font-medium leading-relaxed">{highlight}</p>
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 pt-6 border-t border-slate-50">
+           <div className="flex items-center gap-3 pt-6 border-t border-slate-50">
           <div className="p-2 bg-brand-purple/10 text-brand-purple rounded-xl">
             <LuSparkles size={18} className="animate-pulse" />
           </div>
@@ -204,26 +160,15 @@ const ComparisonSummaryCard = ({ summary, statisticsA, statisticsB, metrics }: P
       </div>
 
       {/* ── Lado direito: painel de métricas-chave ── */}
-      {hasMetrics && (
-        <div style={{
-          width: '320px',
-          flexShrink: 0,
-          background: '#11111b',
-          padding: '24px 18px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          borderRadius: '0 2.5rem 2.5rem 0',
-        }}>
+       {hasMetrics && (
+ <div style={{ background: '#11111b' }}
+      className="w-full lg:w-[320px] lg:flex-shrink-0 p-5 md:p-6 flex flex-col gap-2 rounded-b-[1.5rem] lg:rounded-b-none lg:rounded-r-[2.5rem]"
+    >
           {/* Header do painel */}
           <div style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.3)',
-            paddingBottom: '10px',
-            borderBottom: '0.5px solid rgba(255,255,255,0.07)',
+            fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)',
+            paddingBottom: '10px', borderBottom: '0.5px solid rgba(255,255,255,0.07)',
             marginBottom: '2px',
           }}>
             Métricas-chave

@@ -12,4 +12,5 @@ export interface RegisterCredentials {
 export interface User {
     id: number;
     name: string;
+    is2FAEnabled: boolean;
 }

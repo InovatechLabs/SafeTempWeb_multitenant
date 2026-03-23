@@ -25,7 +25,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // states de formulário de cadastro
     const [name, setName] = useState("");
@@ -36,6 +35,10 @@ const Register = () => {
   const handleLoginClick = () => {
     navigate('/login');
   }
+
+  const handleHomeClick = () => {
+    navigate('/home')
+  };
 
    const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +66,6 @@ const Register = () => {
         });
       } else {
         toast.error(backendMessage);
-        setError(backendMessage); 
       }
     } finally {
       setLoading(false);
@@ -82,7 +84,7 @@ const Register = () => {
             className="relative z-10 w-full max-w-md"
           >
           <div className="mb-5 flex flex-col justify-center items-center">
-           <img src={logost} className='max-w-[70%]'/>
+           <img src={logost} className='max-w-[70%] cursor-pointer hover:scale-103 transition-all duration-150' onClick={handleHomeClick} />
             <p className="text-gray-600 mt-3 text-xs tracking-[0.3em] uppercase font-jakarta font-bold">
               Sistema de monitoramento
             </p>
@@ -134,6 +136,7 @@ const Register = () => {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
+                      autoComplete='new-password'
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-purple/20 focus:bg-white transition-all font-medium text-gray-700"
                     />

@@ -26,13 +26,9 @@ export function useHistory() {
     queryKey: ['use-history'],
     queryFn: async () => {
       try {
-        const [lastRes, historyRes] = await Promise.all([
-          api.get('data/lastdata'),
+        const [ historyRes] = await Promise.all([
           api.get('data/history1h')
         ]);
-
-        console.log("Dados LastData:", lastRes.data);
-        console.log("Dados History:", historyRes.data);
 
         return {
           records: historyRes.data.records || [], 

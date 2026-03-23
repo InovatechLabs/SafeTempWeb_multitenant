@@ -5,6 +5,8 @@ import type { TemperatureStatistics } from '../../types/statistics/TemperatureSt
 import { useGenerateInsight } from '../../hooks/useInsight';
 import type { GreenhouseContext } from '../../types/insightContext';
 import { useAuth } from '../../contexts/auth/authContext';
+import type { AxiosError } from 'axios';
+import type BackendErrorResponse from '../../types/axios';
 
 interface DashboardSidebarProps {
   stats: TemperatureStatistics | undefined;
@@ -60,8 +62,9 @@ export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCS
         onInsightSuccess(data.insight);
         setIsOpen(false); 
       },
-      onError: (err: any) => {
-        const msg = err.response?.data?.message || "Erro ao conectar com o serviço de IA.";
+      onError: (err: unknown) => {
+        const axiosError = err as AxiosError<BackendErrorResponse>;
+        const msg = axiosError.response?.data?.message || "Erro ao conectar com o serviço de IA.";
         alert(msg);
       }
     });

@@ -62,8 +62,14 @@ export const PeriodCard = ({ title, date, stats, isAlternative = false }: Period
   );
 };
 
+interface StatItemProps {
+  icon: React.ReactNode;
+  value: number | string;
+  label: string;
+  color: string;
+}
 
-const StatItem = ({ icon, value, label, color }: any) => (
+const StatItem = ({ icon, value, label, color }: StatItemProps) => (
   <div className="flex flex-col">
     <div className="flex items-center gap-2 mb-1">
       <div className={`${color} opacity-80`}>{icon}</div>
