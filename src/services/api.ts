@@ -1,4 +1,14 @@
 import axios from 'axios';
+import { QueryClient } from '@tanstack/react-query';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL, 
@@ -12,6 +22,7 @@ export const api = axios.create({
 let isRefreshing = false;
 let failedQueue: { resolve: (value: unknown) => void; reject: (reason?: any) => void }[] = [];
 
+// @ts-ignore
 let isAuthenticated = false;
 
 export const setAuthState = (value: boolean) => {
@@ -43,13 +54,6 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-
-if (!isAuthenticated) {
-  return Promise.reject(error);
-}
-
-console.log('✅ isAuthenticated ok, verificando isRefreshing...');
-
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
@@ -60,28 +64,25 @@ console.log('✅ isAuthenticated ok, verificando isRefreshing...');
 originalRequest._retry = true;
 isRefreshing = true;
 
-
-    if (!isAuthenticated) {
-  return Promise.reject(error);
-}
-
     try {
       await api.post('user/refresh');
       processQueue(null);
-      return api(originalRequest); 
+      setAuthState(true); 
+      queryClient.invalidateQueries({ queryKey: ['authUser'], refetchType: 'all' }); 
+      return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError);
-       const publicRoutes = ['/login', '/register', '/recover', '/', '/home'];
-  const isPublicRoute = publicRoutes.some(route => 
-    window.location.pathname === route || 
-    window.location.pathname.startsWith('/recover/')
-  );
-  
-  if (!isPublicRoute) {
-    window.location.href = '/login';
-  }
-  return Promise.reject(refreshError);
-} finally {
+      setAuthState(false);
+      const publicRoutes = ['/login', '/register', '/recover', '/', '/home'];
+      const isPublicRoute = publicRoutes.some(route =>
+        window.location.pathname === route ||
+        window.location.pathname.startsWith('/recover/')
+      );
+      if (!isPublicRoute) {
+        window.location.href = '/login';
+      }
+      return Promise.reject(refreshError);
+    } finally {
       isRefreshing = false;
     }
   }
