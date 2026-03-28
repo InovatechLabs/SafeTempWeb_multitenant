@@ -19,6 +19,7 @@ import { exportToCSV } from '../../utils/functions/exportToCSV';
 import { exportToJSON } from '../../utils/functions/exportToJSON';
 import { AnimatePresence } from 'framer-motion';
 import { AIInsightCard } from '../../components/dashboard/AIInsightCard';
+import SystemLogConsole from '../../components/dashboard/SystemLogConsole';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -38,6 +39,7 @@ const Dashboard: React.FC = () => {
   const { data, isLoading, isError } = useHistory();
   const [thresholds, setThresholds] = React.useState({ cold: 20, hot: 25 });
   const [currentInsight, setCurrentInsight] = React.useState<string | null>(null);
+  const [showConsole, setShowConsole] = React.useState(false);
 
   if (isLoading) return <div className="p-10 text-center font-bold">Carregando...</div>;
   if (isError || !data?.records) return <div className="p-10 text-center text-red-500">Erro.</div>;
@@ -88,6 +90,8 @@ const Dashboard: React.FC = () => {
 
       <div className="flex flex-col lg:flex-row">
           <DashboardSidebar
+            isConsoleActive={showConsole}
+            onToggleConsole={() => setShowConsole(!showConsole)}
             stats={data?.statistics}
             isLoading={isLoading}
             onExportBoxplot={handleExportBoxplot}
@@ -375,6 +379,11 @@ const Dashboard: React.FC = () => {
             </div>
 
           </div>
+          {showConsole && (
+        <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <SystemLogConsole />
+        </div>
+      )}
         </main>
       </div>
     </div>

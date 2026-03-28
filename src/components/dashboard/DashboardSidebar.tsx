@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LuSettings, LuX, LuFileJson, LuDownload, LuImage, LuChevronUp, LuChevronDown, LuBrainCircuit } from 'react-icons/lu';
+import { LuSettings, LuSquareTerminal, LuX, LuFileJson, LuDownload, LuImage, LuChevronUp, LuChevronDown, LuBrainCircuit } from 'react-icons/lu';
 import type { TemperatureStatistics } from '../../types/statistics/TemperatureStatistics';
 import { useGenerateInsight } from '../../hooks/useInsight';
 import type { GreenhouseContext } from '../../types/insightContext';
@@ -15,9 +15,11 @@ interface DashboardSidebarProps {
   onExportCSV: () => void;
   onExportJSON: () => void;
   onInsightSuccess: (text: string) => void;
+  isConsoleActive: boolean;
+  onToggleConsole: () => void; 
 }
 
-export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCSV, onExportJSON, onInsightSuccess }: DashboardSidebarProps) => {
+export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCSV, onExportJSON, onInsightSuccess, isConsoleActive, onToggleConsole }: DashboardSidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -156,8 +158,9 @@ export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCS
                   </button>
                 </div>
               </div>
-
-    <div className="bg-brand-purple/5 p-6 rounded-[2.5rem] border border-brand-purple/10 transition-all duration-300">
+<div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+     <p className="text-[12px] font-black text-gray-400 uppercase tracking-widest ml-2">Integração com IA</p>
+    <div className="bg-brand-purple/5 p-6 rounded-[1.5rem] border border-brand-purple/10 transition-all duration-300">
       <div className="flex items-center gap-2 mb-4">
         <LuBrainCircuit className="text-brand-purple" size={18} />
         <p className="text-[10px] font-black text-brand-purple uppercase tracking-widest">
@@ -251,6 +254,43 @@ export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCS
                     </button>
                   </div>
                 </div>
+                </div>
+<div className="space-y-4 mb-10">
+  <p className="text-[12px] font-black text-gray-400 uppercase tracking-widest ml-2">Avançado</p>
+  
+  <button 
+    onClick={onToggleConsole}
+    className={`w-full cursor-pointer flex items-center justify-between p-5 rounded-[2rem] transition-all group border ${
+      isConsoleActive 
+        ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
+        : 'bg-gray-50 border-transparent hover:bg-gray-100 text-gray-600'
+    }`}
+  >
+    <div className="flex items-center gap-4">
+      <div className={`p-2 rounded-md transition-colors ${
+        isConsoleActive ? 'bg-white/20' : 'bg-white shadow-sm group-hover:text-brand-purple'
+      }`}>
+        <LuSquareTerminal size={18} />
+      </div>
+      <div className="text-left">
+        <p className={`text-xs font-black ${isConsoleActive ? 'text-white' : 'text-black'}`}>
+          Cloud Console
+        </p>
+        <p className={`text-[10px] font-medium ${isConsoleActive ? 'text-purple-100' : 'text-gray-500'}`}>
+          Abrir terminal para operações avançadas
+        </p>
+      </div>
+    </div>
+    
+    {/* Indicador visual de status */}
+    {isConsoleActive && (
+      <div className="flex items-center gap-1.5 bg-white/20 px-2 py-1 rounded-full">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+        <span className="text-[8px] font-black uppercase">Live</span>
+      </div>
+    )}
+  </button>
+</div>
               </div>
             </motion.aside>
           </>

@@ -111,26 +111,28 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
   }, [cards.length]);
 
   return (
-    <section className="w-full bg-white rounded-[3.5rem] border border-gray-100 shadow-2xl overflow-hidden p-8 lg:p-12 relative">
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-16 mb-14">
-        <div className="flex-1 text-center lg:text-left z-10">
+    <section className="w-full bg-white rounded-[2rem] sm:rounded-[3.5rem] border border-gray-100 shadow-2xl overflow-hidden p-5 sm:p-8 lg:p-12 relative">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-16 mb-8 lg:mb-14">
+        {/* Texto hero */}
+        <div className="flex-1 text-center lg:text-left z-10 w-full">
           <motion.div 
             initial={{ opacity: 0, x: -20 }} 
             animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full mb-6 text-[10px] font-black uppercase tracking-widest"
+            className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/10 text-brand-purple rounded-full mb-4 sm:mb-6 text-[10px] font-black uppercase tracking-widest"
           >
             <LuHistory size={14} /> Data Intelligence
           </motion.div>
-          <h1 className="text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.95] mb-8">
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black text-gray-900 tracking-tighter leading-[0.95] mb-4 sm:mb-8">
             Histórico <span className="text-brand-orange">Explorável</span>
           </h1>
-          <p className="text-gray-500 text-lg font-medium max-w-lg leading-relaxed">
+          <p className="text-gray-500 text-sm sm:text-lg font-medium max-w-lg mx-auto lg:mx-0 leading-relaxed">
             Consulte os registros de temperatura coletados ao longo do tempo em um ambiente construído 
             para análise e interpretação, permitindo uma visualização completa de dados e estatísticas do período
           </p>
         </div>
 
-        <div className="flex-1 relative w-full max-w-[420px] h-[320px] flex items-center justify-center">
+        {/* Card animado — oculto em telas muito pequenas, visível a partir de sm */}
+        <div className="hidden sm:flex flex-1 relative w-full max-w-[420px] h-[260px] sm:h-[300px] lg:h-[320px] items-center justify-center">
           <AnimatePresence mode="popLayout">
             {cards.map((card, i) => i === activeCard && (
               <motion.div
@@ -139,20 +141,20 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
                 animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
                 exit={{ opacity: 0, scale: 1.1, y: -20, rotate: 5 }}
                 whileHover={{ scale: 1.03, rotate: 0.5 }}
-                className={`absolute p-8 rounded-[3rem] text-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] w-full h-full bg-gradient-to-br ${card.color} border border-white/20 backdrop-blur-xl flex flex-col justify-between cursor-pointer`}
+                className={`absolute p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] text-white shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] w-full h-full bg-gradient-to-br ${card.color} border border-white/20 backdrop-blur-xl flex flex-col justify-between cursor-pointer`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-lg shadow-inner">{card.icon}</div>
+                  <div className="p-3 sm:p-4 bg-white/20 rounded-2xl backdrop-blur-lg shadow-inner">{card.icon}</div>
                   <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">SafeTemp v3.0</div>
                 </div>
                 
                 <div>
-                   <h4 className="font-black text-2xl mb-2 tracking-tight">{card.title}</h4>
+                   <h4 className="font-black text-xl sm:text-2xl mb-2 tracking-tight">{card.title}</h4>
                    <p className="text-white/70 text-xs font-medium leading-relaxed">{card.desc}</p>
                    {card.content}
                 </div>
 
-                <div className="flex gap-1.5 mt-6">
+                <div className="flex gap-1.5 mt-4 sm:mt-6">
                   {cards.map((_, idx) => (
                     <div 
                       key={idx} 
@@ -166,15 +168,16 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
         </div>
       </div>
 
-      <div className="bg-gray-50/50 p-6 rounded-[2.5rem] border border-gray-100 flex flex-col lg:flex-row gap-6 items-end">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full">
+      {/* Formulário de busca */}
+      <div className="bg-gray-50/50 p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 flex flex-col gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase text-gray-400 ml-2">Data das Leituras</label>
             <input 
               type="date" 
               value={formValues.date}
               onChange={(e) => setFormValues({...formValues, date: e.target.value})}
-              className="w-full p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
+              className="w-full p-3 sm:p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
             />
           </div>
           <div className="space-y-2">
@@ -183,7 +186,7 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
               type="time" 
               value={formValues.start}
               onChange={(e) => setFormValues({...formValues, start: e.target.value})}
-              className="w-full p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
+              className="w-full p-3 sm:p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
             />
           </div>
           <div className="space-y-2">
@@ -192,7 +195,7 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
               type="time" 
               value={formValues.end}
               onChange={(e) => setFormValues({...formValues, end: e.target.value})}
-              className="w-full p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
+              className="w-full p-3 sm:p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all" 
             />
           </div>
           <div className="space-y-2">
@@ -200,7 +203,7 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
             <select 
               value={formValues.granularity}
               onChange={(e) => setFormValues({...formValues, granularity: e.target.value})}
-              className="w-full p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all"
+              className="w-full p-3 sm:p-3.5 bg-white border border-gray-100 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-brand-purple/20 transition-all"
             >
               <option value="1m">1 minuto</option>
               <option value="5m">5 minutos</option>
@@ -212,7 +215,7 @@ const HistoryHero = ({ formValues, setFormValues, onSearch, isLoading }: History
         <button 
           onClick={onSearch}
           disabled={isLoading}
-          className="w-full lg:w-auto px-10 py-4 bg-brand-orange text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-brand-purple/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full px-10 py-4 bg-brand-orange text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-brand-purple/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
         >
           {isLoading ? <LuLoader className="animate-spin" size={18} /> : <LuSearch size={18} />}
           <span>Resgatar Dados</span>
@@ -247,17 +250,19 @@ export default function HistoryPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] p-4 sm:p-8 max-w-[100vw] overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8f9fc] p-3 sm:p-6 lg:p-8 max-w-[100vw] overflow-x-hidden">
       <Navbar />
       
-      <div className="mt-20 space-y-12 max-w-full mx-auto">
+      <div className="mt-24 sm:mt-20 space-y-6 sm:space-y-10 lg:space-y-12 max-w-full mx-auto">
         <HistoryHero 
           formValues={formValues} 
           setFormValues={setFormValues} 
           onSearch={handleSearch} 
           isLoading={isLoading} 
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <StatCard 
             label="Amostragem" 
             value={records.length.toString()} 
@@ -280,8 +285,9 @@ export default function HistoryPage() {
           />
         </div>
 
-        <div className="bg-white p-8 rounded-[3.5rem] border border-gray-100 shadow-sm h-[500px] flex flex-col">
-          <div className="flex justify-between items-center mb-8">
+        {/* Chart */}
+        <div className="bg-white p-5 sm:p-8 rounded-[2rem] sm:rounded-[3.5rem] border border-gray-100 shadow-sm h-[300px] sm:h-[400px] lg:h-[500px] flex flex-col">
+          <div className="flex justify-between items-center mb-4 sm:mb-8">
             <div className="flex items-center gap-3">
                <div className="w-2 h-2 bg-brand-orange rounded-full animate-pulse" />
                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Telemetria Histórica</h3>
@@ -289,7 +295,7 @@ export default function HistoryPage() {
             {isLoading && (
               <div className="flex items-center gap-2 text-brand-purple">
                 <LuLoader className="animate-spin" size={14} />
-                <span className="text-[10px] font-black uppercase">Sincronizando Banco...</span>
+                <span className="text-[10px] font-black uppercase hidden sm:inline">Sincronizando Banco...</span>
               </div>
             )}
           </div>
@@ -316,6 +322,7 @@ export default function HistoryPage() {
                   tickLine={false} 
                   tick={{fontSize: 10, fill: '#9ca3af', fontWeight: 600}} 
                   domain={['auto', 'auto']}
+                  width={40}
                 />
                 <Tooltip 
                   contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'}} 
@@ -334,6 +341,7 @@ export default function HistoryPage() {
             </ResponsiveContainer>
           </div>
         </div>
+
         <AdvancedAnalytics stats={data?.statistics} isLoading={isLoading} />
       </div>
     </div>
@@ -343,15 +351,15 @@ export default function HistoryPage() {
 const StatCard = ({ label, value, unit, icon, color }: StatCardProps) => (
   <motion.div 
     whileHover={{ y: -5 }}
-    className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center justify-between transition-all"
+    className="bg-white p-4 sm:p-6 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm flex items-center justify-between transition-all"
   >
     <div>
-      <p className="text-[10px] font-black text-gray-400 uppercase mb-1">{label}</p>
+      <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase mb-1">{label}</p>
       <div className="flex items-baseline gap-1">
-        <p className={`text-2xl font-black text-brand-${color}`}>{value}</p>
+        <p className={`text-xl sm:text-2xl font-black text-brand-${color}`}>{value}</p>
         <span className="text-[10px] text-gray-400 font-bold">{unit}</span>
       </div>
     </div>
-    <div className={`p-4 bg-brand-${color}/10 text-brand-${color} rounded-2xl`}>{icon}</div>
+    <div className={`p-3 sm:p-4 bg-brand-${color}/10 text-brand-${color} rounded-2xl`}>{icon}</div>
   </motion.div>
 );
