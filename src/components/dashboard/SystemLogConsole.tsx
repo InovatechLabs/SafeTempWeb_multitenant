@@ -3,14 +3,18 @@ import { Terminal, Activity, ChevronRight, HelpCircle } from 'lucide-react';
 import { useSystemLogs } from '../../hooks/useSystemStatus';
 import api from '../../services/api'; 
 import { commandGuide } from './systemLog/helpCommands';
+import { AxiosError } from 'axios';
+import type BackendErrorResponse from '../../types/axios';
+import type { SystemLog } from '../../types/logs';
 
 const CHIP_ID = "10711434E3EC";
 
 const SystemLogConsole = () => {
-  const { logs: sseLogs, isConnected: isSSEConnected } = useSystemLogs();
+  const { logs: sseLogs, isConnected: isSSEConected, status: sseStatus, clearLogs } = useSystemLogs();
   const [isDeviceOnline, setIsDeviceOnline] = useState(false);
   const [commandInput, setCommandInput] = useState("");
-  const [isHelpVisible, setIsHelpVisible] = useState(true); // Estado para controlar o menu lateral
+  const [isHelpVisible, setIsHelpVisible] = useState(true);
+  const [localLogs, setLocalLogs] = useState<SystemLog[]>([]);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -18,6 +22,26 @@ const SystemLogConsole = () => {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
+
+  const statusConfig = {
+    connecting: {
+      color: 'text-zinc-600',
+      message: '[SYSTEM] ESTABLISHING CLOUD LINK...',
+      indicator: 'bg-zinc-600 animate-pulse'
+    },
+    connected: {
+      color: 'text-emerald-500',
+      message: '[SYSTEM] DASHBOARD SYNC SUCCESSFUL',
+      indicator: 'bg-green-500 animate-pulse'
+    },
+    error: {
+      color: 'text-red-500',
+      message: '[SYSTEM] CONNECTION FAILED - RETRYING',
+      indicator: 'bg-red-500'
+    }
+  };
+
+  const currentUI = statusConfig[sseStatus];
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -65,17 +89,40 @@ const SystemLogConsole = () => {
     const cmd = commandInput.trim();
     if (!cmd) return;
 
+    if (cmd === 'clear' || 'cls' || 'sys:clear' || 'sys:cls') {
+      clearLogs();      
+      setLocalLogs([]); 
+      setCommandInput("");
+
+      return;
+    }
     try {
       setHistory(prev => [cmd, ...prev.filter(c => c !== cmd)].slice(0, 20));
       setHistoryIndex(-1);
       await api.post(`device/${CHIP_ID}/command`, { command: cmd });
       setCommandInput("");
-    } catch (error) {
-      console.error("Falha ao enviar comando:", error);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<BackendErrorResponse>;
+
+      const errorMsg = axiosError.response?.data?.message || "Falha na comunicação com o servidor.";
+
+      const terminalError: SystemLog = {
+        id: Date.now(),
+        chipId: CHIP_ID,
+        level: 'ERROR',
+        message: `[SISTEMA] ${errorMsg}`, 
+        timestamp: new Date().toISOString()
+      };
+
+      setLocalLogs(prev => [terminalError, ...prev].slice(0, 10));
+      setCommandInput("");
     }
   };
 
-  const isSystemFullyOperational = isSSEConnected && isDeviceOnline;
+  const isSystemFullyOperational = isSSEConected && isDeviceOnline;
+  const allLogs = [...localLogs, ...sseLogs]
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 50);
 
   return (
     <div className={`bg-white rounded-[2.5rem] max-w-full p-6 mt-4 sm:p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] w-full border border-brand-purple/10 flex flex-col h-auto lg:h-[650px] transition-all duration-500 ${isHelpVisible ? 'max-w-[950px]' : 'max-w-[700px]'}`}>
@@ -91,7 +138,7 @@ const SystemLogConsole = () => {
             <div className="flex items-center gap-1.5 mt-1">
               <div className={`w-1.5 h-1.5 rounded-full ${isSystemFullyOperational ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
-                {isSystemFullyOperational ? 'Real-time Linked' : 'Offline Mode'}
+                {isSystemFullyOperational ? 'Conexão estabelecida' : 'Offline'}
               </span>
             </div>
           </div>
@@ -103,7 +150,7 @@ const SystemLogConsole = () => {
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all border ${isHelpVisible ? 'bg-brand-purple text-white border-brand-purple' : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200'}`}
           >
             <HelpCircle size={14} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Guia</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Comandos</span>
           </button>
           <Activity size={18} className="text-gray-300" />
         </div>
@@ -117,29 +164,31 @@ const SystemLogConsole = () => {
         >
           <div className="border-b border-zinc-900 pb-3 mb-4 shrink-0 flex justify-between items-start">
             <div>
-              <p className="text-emerald-500 font-bold tracking-tight">
-                [SYSTEM] DASHBOARD SYNC SUCCESSFUL
-              </p>
+                          <p className={`${currentUI.color} font-bold tracking-tight transition-colors duration-500`}>
+                              {currentUI.message}
+                          </p>
               <p className="text-zinc-600 text-[9px] mt-0.5">DEVICE_ID: {CHIP_ID}</p>
             </div>
             <span className="text-zinc-800 text-[8px] font-bold">ST-V3.0</span>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar-dark space-y-2 mb-4 pr-2">
-            {sseLogs.map((log, index) => (
-              <div key={log.id || index} className="leading-relaxed animate-in fade-in duration-500">
-                <span className="text-zinc-700 mr-2 text-[10px]">
-                  {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour12: false })}
-                </span>
-                <span className={`font-bold mr-2 ${
-                  log.level === 'ERROR' ? 'text-red-500' : 
-                  log.level === 'WARN' ? 'text-yellow-500' : 'text-blue-400'
-                }`}>
-                  {log.level}:
-                </span>
-                <span className="text-zinc-400">{log.message}</span>
-              </div>
-            ))}
+ {allLogs.map((log, index) => (
+        <div key={log.id || index} className="leading-relaxed animate-in fade-in duration-500">
+          <span className="text-zinc-600 mr-2 text-[12px]">
+            {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour12: false })}
+          </span>
+          <span className={`font-bold mr-2 text-[12px] ${
+            log.level === 'ERROR' ? 'text-red-500' : 
+            log.level === 'WARN' ? 'text-yellow-500' : 'text-blue-400'
+          }`}>
+            {log.level}:
+          </span>
+          <span className={log.level === 'ERROR' ? 'text-red-400/80 text-[12px]' : 'text-zinc-400 text-[12px]'}>
+            {log.message}
+          </span>
+        </div>
+      ))}
           </div>
 
           <div className="mt-auto border-t border-zinc-900 pt-3 shrink-0">
@@ -175,7 +224,7 @@ const SystemLogConsole = () => {
         </div>
 
         {isHelpVisible && (
-          <div className="w-full lg:w-64 shrink-0 overflow-y-auto pr-2 custom-scrollbar border-l border-gray-50 lg:pl-6 animate-in slide-in-from-right-4 duration-500">
+          <div className="w-full lg:w-64 shrink-0 overflow-y-auto pr-2 border-l border-gray-50 lg:pl-6 animate-in slide-in-from-right-4 duration-500">
             <div className="space-y-6">
               {commandGuide.map((cat) => (
                 <div key={cat.category}>

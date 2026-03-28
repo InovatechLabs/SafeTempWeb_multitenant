@@ -16,7 +16,8 @@ export const commandGuide = [
       category: "Sistema",
       icon: Server,
       commands: [
-        { code: "sys:ws_clients", desc: "Contagem de dispositivos conectados ao WebSocket" }
+        { code: "sys:ws_clients", desc: "Contagem de dispositivos conectados ao WebSocket" },
+        { code: "sys:clear", desc: "Limpa a visualização do terminal" }
       
       ]
     },
