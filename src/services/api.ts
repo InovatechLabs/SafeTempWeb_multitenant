@@ -19,6 +19,21 @@ export const api = axios.create({
   }
 });
 
+let inMemoryToken: string | null = null;
+
+export const setInMemoryToken = (token: string | null) => {
+  inMemoryToken = token;
+};
+
+export const getInMemoryToken = () => inMemoryToken;
+
+api.interceptors.request.use((config) => {
+  if (inMemoryToken) {
+    config.headers.Authorization = `Bearer ${inMemoryToken}`;
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let failedQueue: { resolve: (value: unknown) => void; reject: (reason?: any) => void }[] = [];
 
@@ -61,14 +76,17 @@ api.interceptors.response.use(
         .catch((err) => Promise.reject(err));
     }
 
-originalRequest._retry = true;
-isRefreshing = true;
+    originalRequest._retry = true;
+    isRefreshing = true;
 
     try {
-      await api.post('user/refresh');
+      const refreshResponse = await api.post('user/refresh');
+      const newAccessToken = refreshResponse.data.accessToken;
+      setInMemoryToken(newAccessToken); 
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       processQueue(null);
-      setAuthState(true); 
-      queryClient.invalidateQueries({ queryKey: ['authUser'], refetchType: 'all' }); 
+      setAuthState(true);
+      queryClient.invalidateQueries({ queryKey: ['authUser'], refetchType: 'all' });
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError);

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { authService } from '../../services/auth/authService';
 import type { User } from '../../types/auth';
-import { setAuthState, queryClient } from '../../services/api';
+import { setAuthState, queryClient, setInMemoryToken } from '../../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -33,6 +33,7 @@ const { data: user, isLoading, isError } = useQuery({
   }, [user]);
 
   const logout = () => {
+    setInMemoryToken(null);
     setAuthState(false);
     authService.logout();
     queryClient.setQueryData(['authUser'], null); 

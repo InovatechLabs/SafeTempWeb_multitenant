@@ -7,7 +7,7 @@ import { authService } from '../../services/auth/authService';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import api from '../../services/api';
+import api, { setInMemoryToken } from '../../services/api';
 
 interface BackendErrorResponse {
   message?: string;
@@ -81,7 +81,8 @@ const Login = () => {
     }
     setLoadingCode(true);
     try {
-      await api.post('2fa/verify-login-code', { token2FA: code2FA, ...(tempToken && { tempToken }) });
+      const response = await api.post('2fa/verify-login-code', { token2FA: code2FA, ...(tempToken && { tempToken }) });
+      setInMemoryToken(response.data.accessToken);
       toast.success('Login realizado com sucesso');
       await queryClient.invalidateQueries({ queryKey: ['authUser'] });
       navigate('/home');
