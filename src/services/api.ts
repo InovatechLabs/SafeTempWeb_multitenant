@@ -73,7 +73,7 @@ isRefreshing = true;
     } catch (refreshError) {
       processQueue(refreshError);
       setAuthState(false);
-      const publicRoutes = ['/login', '/register', '/recover', '/', '/home'];
+      const publicRoutes = ['/login', '/register', '/recover', '/', '/home', '/dashboard', '/historico', '/historico/relatorios'];
       const isPublicRoute = publicRoutes.some(route =>
         window.location.pathname === route ||
         window.location.pathname.startsWith('/recover/')

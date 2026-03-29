@@ -89,7 +89,7 @@ const SystemLogConsole = () => {
     const cmd = commandInput.trim();
     if (!cmd) return;
 
-    if (cmd === 'clear' || 'cls' || 'sys:clear' || 'sys:cls') {
+    if (['clear', 'cls', 'sys:clear', 'sys:cls'].includes(cmd)) {
       clearLogs();      
       setLocalLogs([]); 
       setCommandInput("");

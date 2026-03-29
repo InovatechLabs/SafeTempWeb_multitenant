@@ -248,7 +248,7 @@ export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCS
                     <button 
                       onClick={handleGenerateInsight}
                       disabled={mutation.isPending || !isAuthenticated}
-                      className="w-full cursor-pointer py-3.5 bg-brand-purple text-white rounded-2xl text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all font-black uppercase tracking-widest shadow-lg shadow-brand-purple/20 mt-2 disabled:opacity-50 disabled:cursor-wait"
+                      className="w-full cursor-pointer py-3.5 bg-brand-purple text-white rounded-2xl text-[10px] hover:scale-[1.02] active:scale-[0.98] transition-all font-black uppercase tracking-widest shadow-lg shadow-brand-purple/20 mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-[1]"
                     >
                       {mutation.isPending ? 'Analisando Dados...' : 'Gerar Insight'}
                     </button>
@@ -260,7 +260,8 @@ export const DashboardSidebar = ({ stats, isLoading, onExportBoxplot, onExportCS
   
   <button 
     onClick={onToggleConsole}
-    className={`w-full cursor-pointer flex items-center justify-between p-5 rounded-[2rem] transition-all group border ${
+    disabled={!isAuthenticated}
+    className={`w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-between p-5 rounded-[2rem] transition-all group border ${
       isConsoleActive 
         ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' 
         : 'bg-gray-50 border-transparent hover:bg-gray-100 text-gray-600'
