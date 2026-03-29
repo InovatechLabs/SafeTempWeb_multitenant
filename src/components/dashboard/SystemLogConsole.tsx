@@ -125,7 +125,7 @@ const SystemLogConsole = () => {
     .slice(0, 50);
 
   return (
-    <div className={`bg-white rounded-[2.5rem] max-w-full p-6 mt-4 sm:p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] w-full border border-brand-purple/10 flex flex-col h-auto lg:h-[650px] transition-all duration-500 ${isHelpVisible ? 'max-w-[950px]' : 'max-w-[700px]'}`}>
+    <div className={`bg-white rounded-[2.5rem] max-w-full p-6 mt-4 sm:p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] w-full border border-brand-purple/10 flex flex-col h-auto lg:h-[650px] transition-all duration-500 w-full overflow-x-hidden ${isHelpVisible ? 'max-w-[950px]' : 'max-w-[700px]'}`}>
       <div className="flex justify-between items-center mb-6 px-2">
         <div className="flex items-center gap-3">
           <div className="bg-brand-purple/10 p-2 rounded-xl text-brand-purple">
@@ -205,6 +205,7 @@ const SystemLogConsole = () => {
                   onFocus={() => setIsFocused(true)} 
                   onBlur={() => setIsFocused(false)}
                   autoFocus
+                  style={{ fontSize: '16px'}}
                   className="w-full bg-transparent outline-none border-none focus:ring-0 p-0 text-zinc-200 caret-transparent"
                   spellCheck="false"
                   autoComplete="off"

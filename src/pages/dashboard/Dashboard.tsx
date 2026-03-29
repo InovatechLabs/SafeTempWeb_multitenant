@@ -380,7 +380,7 @@ const Dashboard: React.FC = () => {
 
           </div>
           {showConsole && (
-        <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-x-hidden w-full">
           <SystemLogConsole />
         </div>
       )}
