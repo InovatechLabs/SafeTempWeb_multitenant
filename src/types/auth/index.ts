@@ -13,4 +13,5 @@ export interface User {
     id: number;
     name: string;
     is2FAEnabled: boolean;
+    hasWebPush: boolean;
 }

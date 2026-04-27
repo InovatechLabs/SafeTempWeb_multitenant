@@ -1,4 +1,4 @@
-import { LuBell, LuX, LuCircleAlert, LuInbox, LuCheckCheck } from 'react-icons/lu';
+import { LuX, LuCircleAlert, LuInbox, LuCheckCheck, LuMail } from 'react-icons/lu';
 import { motion, AnimatePresence } from 'framer-motion';
 
 
@@ -7,7 +7,7 @@ export const NotificationButton = ({ onPress, unreadCount }: { onPress: () => vo
     onClick={onPress} 
     className="relative p-2.5 rounded-2xl bg-gray-50 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 transition-all cursor-pointer group"
   >
-    <LuBell size={24} className="group-hover:rotate-12 transition-transform" />
+    <LuMail size={24} className="group-hover:rotate-12 transition-transform" />
     
     {unreadCount > 0 && (
       <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white border-2 border-white shadow-sm">
@@ -28,7 +28,7 @@ export const NotificationInbox = ({ isOpen, onClose, notifications, onMarkAsRead
           className="absolute right-0 mt-3 w-96 bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden z-[110]"
         >
           <div className="flex items-center justify-between p-6 border-b border-gray-50">
-            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Notificações</h3>
+            <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest">Inbox</h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
               <LuX size={20} />
             </button>

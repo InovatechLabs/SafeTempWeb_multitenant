@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
+import { User, LogOut, ChevronDown, ShieldCheck, LucideBell } from 'lucide-react';
 import { useAuth } from '../../../contexts/auth/authContext';
 import TwoFAModal from '../../twoFA/TwoFAModal'; 
+import api from '../../../services/api';
+import { toast } from 'sonner';
 
 const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +12,54 @@ const UserDropdown = () => {
   const { user, logout } = useAuth();
 
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.is2FAEnabled ?? false);
+  const [isWebPushEnabled] = useState(user?.hasWebPush ?? false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
+  const handleSubscribe = async () => {
+    setIsSubscribing(true);
+    try {
+      const permission = await Notification.requestPermission();
+      
+      if (permission === 'denied') {
+        alert('Você bloqueou as notificações. Libere no cadeado ao lado da URL.');
+        setIsSubscribing(false);
+        return;
+      }
+
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+
+        const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+
+        await api.post('alerts/save-web-token', {
+          webPushSubscription: subscription
+        });
+
+        toast.success('Tudo certo! Você receberá alertas de temperatura neste dispositivo.');
+      }
+    } catch (error) {
+      console.error('Erro ao ativar notificações web:', error);
+      toast.error('Ocorreu um erro ao tentar ativar as notificações.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   return (
     <>
@@ -64,13 +114,29 @@ const UserDropdown = () => {
                     <ShieldCheck size={18} className={is2FAEnabled ? 'text-green-500' : 'text-gray-400'} />
                     Autenticação 2FA
                   </button>
+<button 
+  onClick={handleSubscribe} 
+  disabled={isSubscribing || isWebPushEnabled} 
+  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-900 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer text-left disabled:opacity-80 disabled:cursor-default"
+>
+  <LucideBell 
+    size={18} 
+    className={isWebPushEnabled ? 'text-green-400' : 'text-gray-400'} 
+  />
+  {isSubscribing 
+    ? 'Ativando...' 
+    : isWebPushEnabled 
+      ? 'Alertas Ativados' 
+      : 'Ativar Alertas'
+  }
+</button>
 
                   <button
                     onClick={() => { setIsOpen(false); logout(); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer text-left mt-1"
                   >
                     <LogOut size={18} />
-                    Sair da conta
+                    Sair
                   </button>
                 </div>
 
@@ -85,7 +151,6 @@ const UserDropdown = () => {
         </AnimatePresence>
       </div>
 
-      {/* Modal de 2FA — fora do dropdown para não herdar o z-index */}
 <AnimatePresence>
   {is2FAModalOpen && (
     <TwoFAModal
