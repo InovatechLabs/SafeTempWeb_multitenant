@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { Terminal, Activity, ChevronRight, HelpCircle } from 'lucide-react';
+import { Terminal, Activity, ChevronRight, HelpCircle, Cpu } from 'lucide-react';
 import { useSystemLogs } from '../../hooks/useSystemStatus';
 import api from '../../services/api'; 
 import { commandGuide } from './systemLog/helpCommands';
 import { AxiosError } from 'axios';
 import type BackendErrorResponse from '../../types/axios';
 import type { SystemLog } from '../../types/systemLogs';
-
-const CHIP_ID = "10711434E3EC";
+import { useAuth } from '../../contexts/auth/authContext';
 
 const SystemLogConsole = () => {
-  const { logs: sseLogs, isConnected: isSSEConected, status: sseStatus, clearLogs } = useSystemLogs();
+
+  const { activeGreenhouse } = useAuth();
+  const CHIP_ID = activeGreenhouse?.devices?.[0]?.mac_address;
+
+  const { logs: sseLogs, isConnected: isSSEConected, status: sseStatus, clearLogs } = useSystemLogs(activeGreenhouse?.id);
   const [isDeviceOnline, setIsDeviceOnline] = useState(false);
   const [commandInput, setCommandInput] = useState("");
   const [isHelpVisible, setIsHelpVisible] = useState(true);
@@ -26,12 +29,12 @@ const SystemLogConsole = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const getCursorLeft = (text: string): number => {
-  const canvas = canvasRef.current || document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return 0;
-  ctx.font = '16px monospace'; // deve bater exatamente com o font-size e font-family do input
-  return ctx.measureText(text).width;
-};
+    const canvas = canvasRef.current || document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return 0;
+    ctx.font = '16px monospace'; 
+    return ctx.measureText(text).width;
+  };
 
   const statusConfig = {
     connecting: {
@@ -53,7 +56,10 @@ const SystemLogConsole = () => {
 
   const currentUI = statusConfig[sseStatus];
 
+  // 2. O Polling agora depende de ter um CHIP_ID válido
   useEffect(() => {
+    if (!CHIP_ID) return;
+
     const checkStatus = async () => {
       try {
         const { data } = await api.get('device/connected');
@@ -62,10 +68,11 @@ const SystemLogConsole = () => {
         setIsDeviceOnline(false);
       }
     };
+
     checkStatus();
     const interval = setInterval(checkStatus, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [CHIP_ID]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowUp') {
@@ -92,42 +99,65 @@ const SystemLogConsole = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = 0;
     }
-  }, [sseLogs]);
+  }, [sseLogs, localLogs]);
 
-  const handleCommand = async (e: React.FormEvent) => {
+const handleCommand = async (e: React.FormEvent) => {
     e.preventDefault();
     const cmd = commandInput.trim();
-    if (!cmd) return;
+    if (!cmd || !CHIP_ID) return;
 
     if (['clear', 'cls', 'sys:clear', 'sys:cls'].includes(cmd)) {
       clearLogs();      
       setLocalLogs([]); 
       setCommandInput("");
-
       return;
     }
+
+    // Interceptador de segurança para o Restart
+    if (cmd === 'restart') {
+      const confirmed = window.confirm("ATENÇÃO: O equipamento será reiniciado remotamente e ficará offline por alguns segundos. Deseja continuar?");
+      if (!confirmed) return;
+    }
+
+    setHistory(prev => [cmd, ...prev.filter(c => c !== cmd)].slice(0, 20));
+    setHistoryIndex(-1);
+    setCommandInput("");
+
     try {
-      setHistory(prev => [cmd, ...prev.filter(c => c !== cmd)].slice(0, 20));
-      setHistoryIndex(-1);
-      await api.post(`device/${CHIP_ID}/command`, { command: cmd });
-      setCommandInput("");
+      await api.post(`device/${CHIP_ID}/command`, { command: cmd }, {
+        headers: { 'x-greenhouse-id': activeGreenhouse?.id }
+      });
+
     } catch (error: unknown) {
       const axiosError = error as AxiosError<BackendErrorResponse>;
-
       const errorMsg = axiosError.response?.data?.message || "Falha na comunicação com o servidor.";
 
-      const terminalError: SystemLog = {
+      const errorLog: SystemLog = {
         id: Date.now(),
-        chipId: CHIP_ID,
+        chipId: CHIP_ID as string, 
         level: 'ERROR',
         message: `[SISTEMA] ${errorMsg}`, 
         timestamp: new Date().toISOString()
       };
 
-      setLocalLogs(prev => [terminalError, ...prev].slice(0, 10));
-      setCommandInput("");
+      // Adiciona apenas o erro na tela, se houver
+      setLocalLogs(prev => [errorLog, ...prev].slice(0, 10));
     }
   };
+
+  if (!CHIP_ID) {
+    return (
+      <div className={`bg-white rounded-[2.5rem] p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] border border-brand-purple/10 flex flex-col items-center justify-center h-auto lg:h-[650px] transition-all w-full mt-4`}>
+         <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mb-6">
+           <Cpu size={32} />
+         </div>
+         <h3 className="text-xl font-black text-gray-900 mb-2 tracking-tight">Nenhum hardware vinculado</h3>
+         <p className="text-sm text-gray-500 font-medium text-center max-w-md leading-relaxed">
+           Este ambiente ainda não possui um equipamento ESP32 ativo para receber comandos remotos. Adicione um equipamento no menu da sua conta para habilitar o Terminal.
+         </p>
+      </div>
+    );
+  }
 
   const isSystemFullyOperational = isSSEConected && isDeviceOnline;
   const allLogs = [...localLogs, ...sseLogs]
@@ -135,7 +165,7 @@ const SystemLogConsole = () => {
     .slice(0, 50);
 
   return (
-    <div className={`bg-white rounded-[2.5rem] max-w-full p-6 mt-4 sm:p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] w-full border border-brand-purple/10 flex flex-col h-auto lg:h-[650px] transition-all duration-500 w-full overflow-x-hidden ${isHelpVisible ? 'max-w-[950px]' : 'max-w-[700px]'}`}>
+    <div className={`bg-white rounded-[2.5rem] max-w-full p-6 mt-4 sm:p-8 shadow-[0_10px_40px_rgba(75,42,89,0.15)] w-full border border-brand-purple/10 flex flex-col h-auto lg:h-[650px] transition-all duration-500 overflow-x-hidden ${isHelpVisible ? 'max-w-[950px]' : 'max-w-[700px]'}`}>
       <div className="flex justify-between items-center mb-6 px-2">
         <div className="flex items-center gap-3">
           <div className="bg-brand-purple/10 p-2 rounded-xl text-brand-purple">
@@ -167,38 +197,37 @@ const SystemLogConsole = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0">
-        
         <div 
           className={`${isHelpVisible ? 'flex-[2]' : 'flex-1'} bg-zinc-950 p-6 font-mono text-[11px] overflow-hidden flex flex-col shadow-2xl border border-zinc-800 cursor-text min-h-[400px] lg:min-h-0 transition-all duration-500`}
           onClick={() => inputRef.current?.focus()}
         >
           <div className="border-b border-zinc-900 pb-3 mb-4 shrink-0 flex justify-between items-start">
             <div>
-                          <p className={`${currentUI.color} font-bold tracking-tight transition-colors duration-500`}>
-                              {currentUI.message}
-                          </p>
+              <p className={`${currentUI.color} font-bold tracking-tight transition-colors duration-500`}>
+                  {currentUI.message}
+              </p>
               <p className="text-zinc-600 text-[9px] mt-0.5">DEVICE_ID: {CHIP_ID}</p>
             </div>
             <span className="text-zinc-800 text-[8px] font-bold">ST-V3.0</span>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar-dark space-y-2 mb-4 pr-2">
- {allLogs.map((log, index) => (
-        <div key={log.id || index} className="leading-relaxed animate-in fade-in duration-500">
-          <span className="text-zinc-600 mr-2 text-[12px]">
-            {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour12: false })}
-          </span>
-          <span className={`font-bold mr-2 text-[12px] ${
-            log.level === 'ERROR' ? 'text-red-500' : 
-            log.level === 'WARN' ? 'text-yellow-500' : 'text-blue-400'
-          }`}>
-            {log.level}:
-          </span>
-          <span className={log.level === 'ERROR' ? 'text-red-400/80 text-[12px]' : 'text-zinc-400 text-[12px]'}>
-            {log.message}
-          </span>
-        </div>
-      ))}
+            {allLogs.map((log, index) => (
+              <div key={log.id || index} className="leading-relaxed animate-in fade-in duration-500">
+                <span className="text-zinc-600 mr-2 text-[12px]">
+                  {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour12: false })}
+                </span>
+                <span className={`font-bold mr-2 text-[12px] ${
+                  log.level === 'ERROR' ? 'text-red-500' : 
+                  log.level === 'WARN' ? 'text-yellow-500' : 'text-blue-400'
+                }`}>
+                  {log.level}:
+                </span>
+                <span className={log.level === 'ERROR' ? 'text-red-400/80 text-[12px]' : 'text-zinc-400 text-[12px]'}>
+                  {log.message}
+                </span>
+              </div>
+            ))}
           </div>
 
           <div className="mt-auto border-t border-zinc-900 pt-3 shrink-0">

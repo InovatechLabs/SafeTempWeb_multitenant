@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { TrendingUp, TrendingDown, Minus, Zap, Activity, Waves, Clock, DoorClosed } from 'lucide-react';
 import { useDashboard } from '../../../hooks/useDashboard';
+import { useAuth } from '../../../contexts/auth/authContext';
 
 const DashboardCard = () => {
-  const { data, isLoading } = useDashboard();
+
+  const {activeGreenhouse} = useAuth();
+
+  const { data, isLoading } = useDashboard(activeGreenhouse?.id);
   const prevValueRef = useRef<number | null>(null);
   const [trend, setTrend] = useState({ icon: Minus, color: 'text-gray-400', text: 'Estável' });
 

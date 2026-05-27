@@ -3,6 +3,18 @@ export interface LoginCredentials {
     password: string;
 };
 
+export interface Greenhouse {
+    id: number;
+    name: string;
+    isPublic: boolean;
+    devices: {
+        id: number;
+        mac_address: string;
+        greenhouseId: number;
+    }[];
+    allowExperiments: boolean;
+}
+
 export interface RegisterCredentials {
     name: string;
     email: string;
@@ -14,4 +26,5 @@ export interface User {
     name: string;
     is2FAEnabled: boolean;
     hasWebPush: boolean;
+    greenhouses: Greenhouse[];
 }

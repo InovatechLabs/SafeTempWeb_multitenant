@@ -146,7 +146,7 @@ const Navbar = () => {
                       }
                     }}
                     className={`
-                      relative group overflow-hidden cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl text-md font-semibold transition-all duration-500
+                      relative group outline-none overflow-hidden cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl text-md font-semibold transition-all duration-500
                       ${ativo || isOpenMenu ? 'text-white' : 'text-gray-600 hover:text-white transition-all duration-100'}
                     `}
                   >

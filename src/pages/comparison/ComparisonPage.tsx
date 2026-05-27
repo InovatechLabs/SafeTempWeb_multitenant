@@ -10,6 +10,7 @@ import { buildExportRows, isDown, tableGroups } from "./helpers/tableGroups";
 import { exportToJSON } from "../../utils/functions/exportToJSON";
 import { exportToCSV } from "../../utils/functions/exportToCSV";
 import { LuTable2, LuChartBar } from 'react-icons/lu';
+import { useAuth } from "../../contexts/auth/authContext";
 
 export interface HistoryPoint {
   timestamp: string;
@@ -27,10 +28,13 @@ const ComparisonPage = () => {
   const [activeTab, setActiveTab] = useState<'table' | 'charts'>('table');
 const [pointTime, setPointTime] = useState('');
 
+  const {activeGreenhouse} = useAuth();
+
   const { data, isLoading, isError, refetch } = useComparison({
     rangeA: dateA,
     rangeB: dateB,
     granularity,
+    greenhouseId: activeGreenhouse?.id
   });
 
   const seriesA = data?.seriesA || [];

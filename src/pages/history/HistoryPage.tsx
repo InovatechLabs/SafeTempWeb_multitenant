@@ -14,6 +14,7 @@ import { useData } from '../../hooks/useDashboard';
 import { formatTimeBRT } from '../../utils/formatters/formatTimeBRT';
 import AdvancedAnalytics from '../../components/nav/history/AdvancedAnalytics';
 import type { TemperatureRecord } from '../../types/records/TemperatureRecord';
+import { useAuth } from '../../contexts/auth/authContext';
 
 interface HistoryHeroProps {
   formValues: {
@@ -237,7 +238,8 @@ export default function HistoryPage() {
     date: new Date().toISOString().split('T')[0]
   });
 
-  const { data, isLoading } = useData(queryParams);
+  const {activeGreenhouse} = useAuth();
+  const { data, isLoading } = useData(queryParams, activeGreenhouse?.id);
 
   const handleSearch = () => {
     setQueryParams({ ...formValues });

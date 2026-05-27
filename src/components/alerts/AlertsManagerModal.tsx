@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Clock, Trash2, Edit2, ShieldAlert, Check, Power, PowerOff } from 'lucide-react';
+import { X, Bell, Clock, Trash2, Edit2, ShieldAlert, Check, Power, PowerOff, Leaf } from 'lucide-react';
 import type { Alert } from '../../utils/types/alert/index';
 import api from '../../services/api';
 import { formatTimeBRT } from '../../utils/formatters/formatTimeBRT';
@@ -93,6 +93,7 @@ interface AlertsManagerModalProps {
   onClose: () => void;
 }
 
+
 const detectOS = () => {
   const userAgent = window.navigator.userAgent.toLowerCase();
   if (userAgent.includes('win')) return 'Windows';
@@ -104,7 +105,7 @@ const detectOS = () => {
 export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerModalProps) {
 
   const toast = useToast();
-  const {isAuthenticated} = useAuth();
+  const {isAuthenticated, activeGreenhouse, user} = useAuth();
 
   // Form
   const [nome, setNome] = useState('');
@@ -118,6 +119,7 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
 
   // Lista
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [greenhouseFilter, setGreenhouseFilter] = useState<number | 'all'>('all');
 
   const [editingId, setEditingId]     = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -128,17 +130,23 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
 }, []);
 
   const fetchAlerts = async () => {
-    if (isAuthenticated) {
-        try {
-            const response = await api.get('alerts/list');
-            setAlerts(response.data);
-        } catch {
-        toast.error('Falha ao carregar a lista de alertas.');
-        }
-    }
-  };
+    if (isAuthenticated && activeGreenhouse?.id) {
+      try {
+          const response = await api.get('alerts/list', {
+            headers: { 'x-greenhouse-id': activeGreenhouse.id }
+          });
+          setAlerts(response.data);
+      } catch {
+          toast.error('Falha ao carregar a lista de alertas.');
+      }
+  } else {
+      setAlerts([]); 
+  }
+};
 
-  useEffect(() => { fetchAlerts(); }, []);
+useEffect(() => { 
+  fetchAlerts(); 
+}, [activeGreenhouse?.id]);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
@@ -155,27 +163,34 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
   };
 
   const handleSaveAlert = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!temperaturaMin && !temperaturaMax) {
-      toast.error('Defina ao menos uma temperatura mínima ou máxima!');
-      return;
-    }
-    if (!is24h && (!horaInicio || !horaFim)) {
-      toast.error('Defina o horário de início e fim do monitoramento!');
-      return;
-    }
+  e.preventDefault();
+  
+  if (!activeGreenhouse?.id) {
+    toast.error('Nenhum ambiente selecionado para vincular o alerta.');
+    return;
+  }
+  
+  if (!temperaturaMin && !temperaturaMax) {
+    toast.error('Defina ao menos uma temperatura mínima ou máxima!');
+    return;
+  }
+  if (!is24h && (!horaInicio || !horaFim)) {
+    toast.error('Defina o horário de início e fim do monitoramento!');
+    return;
+  }
 
-    setIsLoading(true);
-    try {
-      await api.post('alerts/register-alert', {
-        nome:            nome || undefined,
-        nota:            nota || undefined,
-        temperatura_min: temperaturaMin ? Number(temperaturaMin) : undefined,
-        temperatura_max: temperaturaMax ? Number(temperaturaMax) : undefined,
-        hora_inicio:     !is24h ? horaInicio : undefined,
-        hora_fim:        !is24h ? horaFim    : undefined,
-      });
-      toast.success('Alerta criado com sucesso!');
+  setIsLoading(true);
+  try {
+    await api.post('alerts/register-alert', {
+      greenhouseId:    activeGreenhouse.id, 
+      nome:            nome || undefined,
+      nota:            nota || undefined,
+      temperatura_min: temperaturaMin ? Number(temperaturaMin) : undefined,
+      temperatura_max: temperaturaMax ? Number(temperaturaMax) : undefined,
+      hora_inicio:     !is24h ? horaInicio : undefined,
+      hora_fim:        !is24h ? horaFim    : undefined,
+    });
+    toast.success('Alerta criado com sucesso!');
       setNome(''); setNota(''); setTemperaturaMin(''); setTemperaturaMax('');
       setIs24h(true); setHoraInicio(''); setHoraFim('');
       fetchAlerts();
@@ -189,7 +204,9 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
   const handleDelete = (id: number) => {
     toast.confirm('Deseja realmente excluir este alerta?', async () => {
       try {
-        await api.delete(`alerts/delete/${id}`);
+        await api.delete(`alerts/delete/${id}`, {
+          headers: { 'x-greenhouse-id': activeGreenhouse?.id }
+        });
         toast.success('Alerta excluído.');
         fetchAlerts();
       } catch {
@@ -201,7 +218,9 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
   const handleToggleStatus = async (alert: Alert) => {
     const route = alert.ativo ? `alerts/disable/${alert.id}` : `alerts/enable/${alert.id}`;
     try {
-      await api.patch(route);
+      await api.patch(`${route}`, {
+        headers: { 'x-greenhouse-id': activeGreenhouse?.id }
+      });
       toast.success(alert.ativo ? 'Alerta desativado.' : 'Alerta ativado!');
       fetchAlerts();
     } catch {
@@ -225,7 +244,9 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
       return;
     }
     try {
-      await api.patch(`alerts/editname/${id}`, { nome: editingName.trim() });
+      await api.patch(`alerts/editname/${id}`, { nome: editingName.trim() }, {
+        headers: { 'x-greenhouse-id': activeGreenhouse?.id }
+      });
       toast.success('Nome atualizado!');
       cancelEditing();
       fetchAlerts();
@@ -233,6 +254,11 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
       toast.error('Falha ao atualizar o nome.');
     }
   };
+
+  const filteredAlerts = alerts.filter((alert) => {
+  if (greenhouseFilter === 'all') return true;
+  return alert.greenhouse.id === greenhouseFilter;
+});
 
   return (
     <>
@@ -253,7 +279,7 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-6xl bg-white rounded-[1rem] shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]"
+              className="relative w-full max-w-7xl bg-white rounded-[1rem] shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]"
             >
               <button
                 onClick={onClose}
@@ -400,161 +426,231 @@ export default function AlertsManagerModal({ isOpen, onClose }: AlertsManagerMod
               </div>
 
               {/* ── LADO DIREITO: LISTA ───────────────────────── */}
-              <div className="w-full md:w-[60%] bg-white p-6 md:p-8 overflow-y-auto">
-                <div className="mb-8 pr-8">
-                  <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                    <Bell className="text-brand-purple" />
-                    Alertas Ativos
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1 font-medium">Gerencie suas regras de monitoramento</p>
-                </div>
+<div className="w-full md:w-[60%] bg-white p-6 md:p-8 overflow-y-auto">
+  <div className="mb-6">
+    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+      <Bell className="text-brand-purple" />
+      Alertas Ativos
+    </h2>
+    <p className="text-sm text-gray-400 mt-1">Gerencie suas regras de monitoramento</p>
+  </div>
 
-                <div className="space-y-4">
-                  {alerts.length === 0 && (
-                    <div className="text-center py-16 text-gray-400">
-                      <Bell size={40} className="mx-auto mb-3 opacity-30" />
-                      <p className="font-bold text-sm">Nenhum alerta cadastrado</p>
-                      <p className="text-xs mt-1">Crie um alerta no painel ao lado</p>
-                    </div>
-                  )}
+  {/* ========================================================= */}
+  {/* SELETOR DE FILTRO POR GREENHOUSE (AMBIENTE)               */}
+  {/* ========================================================= */}
+  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+    <div className="flex flex-col">
+      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">
+        Filtrar por Ambiente
+      </label>
+      <select
+        value={greenhouseFilter}
+        onChange={(e) => setGreenhouseFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+        className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-wider text-gray-700 outline-none focus:border-brand-purple transition-all cursor-pointer min-w-[200px] shadow-sm"
+      >
+        <option value="all">🌐 Todos os ambientes</option>
+        {user?.greenhouses?.map((gh) => (
+          <option key={gh.id} value={gh.id}>
+            🔹 {gh.name}
+          </option>
+        ))}
+      </select>
+    </div>
+    
+    <div className="text-xs font-bold text-gray-400 self-end sm:self-center bg-white border border-gray-100 px-3 py-1.5 rounded-xl shadow-sm">
+      {filteredAlerts.length} {filteredAlerts.length === 1 ? 'alerta' : 'alertas'}
+    </div>
+  </div>
 
-                  {alerts.map((alert) => {
-                    const isEditing = editingId === alert.id;
-                    const isActive  = alert.ativo;
+  <div className="space-y-3">
+    {alerts.length === 0 && (
+      <div className="text-center py-16 text-gray-400">
+        <Bell size={40} className="mx-auto mb-3 opacity-30" />
+        <p className="font-medium text-sm">Nenhum alerta cadastrado</p>
+        <p className="text-xs mt-1 text-gray-300">Crie um alerta no painel ao lado</p>
+      </div>
+    )}
 
-                    return (
-                      <div
-                        key={alert.id}
-                        className={`border rounded-2xl p-5 transition-all group ${
-                          isActive
-                            ? 'border-gray-100 hover:border-brand-purple/30'
-                            : 'border-gray-100 opacity-60 bg-gray-50'
-                        }`}
-                      >
-                        {/* Header do card */}
-                        <div className="flex justify-between items-start mb-3 gap-3">
-                          <div className="flex-1 min-w-0">
-                            {/* ── Nome editável ── */}
-                            {isEditing ? (
-                              <div className="flex items-center gap-2">
-                                <input
-                                  autoFocus
-                                  type="text"
-                                  value={editingName}
-                                  onChange={(e) => setEditingName(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleConfirmEdit(alert.id);
-                                    if (e.key === 'Escape') cancelEditing();
-                                  }}
-                                  className="flex-1 min-w-0 text-base font-bold text-gray-900 border-b-2 border-brand-purple outline-none bg-transparent pb-0.5"
-                                />
-                                <button
-                                  onClick={() => handleConfirmEdit(alert.id)}
-                                  className="shrink-0 p-1.5 bg-brand-purple text-white rounded-lg hover:bg-brand-purple/90 transition-colors"
-                                  title="Confirmar"
-                                >
-                                  <Check size={13} />
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  className="shrink-0 p-1.5 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors"
-                                  title="Cancelar"
-                                >
-                                  <X size={13} />
-                                </button>
-                              </div>
-                            ) : (
-                              <h4 className="text-base font-bold text-gray-900 truncate">
-                                {alert.nome || 'Alerta sem nome'}
-                              </h4>
-                            )}
+    {alerts.map((alert) => {
+      const isEditing = editingId === alert.id;
+      const isActive = alert.ativo;
+      const notificationActive = alert.notificacaoAtiva;
 
-                            {alert.nota && !isEditing && (
-                              <p className="text-xs text-gray-400 mt-0.5 italic truncate">{alert.nota}</p>
-                            )}
+      return (
+        <div
+          key={alert.id}
+          className={`border rounded-2xl overflow-hidden transition-all ${
+            notificationActive
+              ? 'border-red-200'
+              : isActive
+              ? 'border-gray-100 hover:border-gray-200'
+              : 'border-gray-100 opacity-55'
+          } bg-white`}
+        >
+          {/* Body */}
+          <div className="px-4 pt-4 pb-3">
 
-                            {/* ── Horário formatado ── */}
-                            <p className="text-xs font-medium text-gray-400 mt-0.5">
-                              {alert.hora_inicio && alert.hora_fim
-                                ? `${formatTimeBRT(alert.hora_inicio)} às ${formatTimeBRT(alert.hora_fim)}`
-                                : 'Monitoramento 24h'}
-                            </p>
-                          </div>
+            {/* Nome + badge de status */}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex-1 min-w-0">
+                {isEditing ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleConfirmEdit(alert.id);
+                        if (e.key === 'Escape') cancelEditing();
+                      }}
+                      className="flex-1 min-w-0 text-sm font-medium text-gray-900 border-b border-brand-purple outline-none bg-transparent pb-0.5"
+                    />
+                    <button
+                      onClick={() => handleConfirmEdit(alert.id)}
+                      className="shrink-0 p-1 rounded-md bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                      title="Confirmar"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      className="shrink-0 p-1 rounded-md bg-gray-100 text-gray-400 hover:bg-gray-200 transition-colors"
+                      title="Cancelar"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <h4 className="text-sm font-medium text-gray-900 truncate">
+                    {alert.nome || 'Alerta sem nome'}
+                  </h4>
+                )}
 
-                          {/* Badge de status */}
-                          <span className={`shrink-0 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${
-                            isActive
-                              ? 'bg-green-50 text-green-600'
-                              : 'bg-gray-100 text-gray-500'
-                          }`}>
-                            {isActive ? 'Ativo' : 'Pausado'}
-                          </span>
-                        </div>
-
-                        {/* Temperaturas */}
-                        <div className="flex items-center gap-4 mb-4">
-                          {alert.temperatura_min != null && (
-                            <div className="bg-blue-50 px-3 py-1.5 rounded-lg">
-                              <span className="text-[10px] font-black uppercase text-blue-400 block mb-0.5">Mínima</span>
-                              <span className="text-sm font-black text-blue-600">{alert.temperatura_min}°C</span>
-                            </div>
-                          )}
-                          {alert.temperatura_max != null && (
-                            <div className="bg-red-50 px-3 py-1.5 rounded-lg">
-                              <span className="text-[10px] font-black uppercase text-red-400 block mb-0.5">Máxima</span>
-                              <span className="text-sm font-black text-red-600">{alert.temperatura_max}°C</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Ações */}
-                        <div className="flex gap-2 border-t border-gray-50 pt-4 mt-2">
-                          {/* Editar nome */}
-                          {!isEditing ? (
-                            <button
-                              onClick={() => startEditing(alert)}
-                              className="flex-1 py-2 text-xs font-bold cursor-pointer text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                            >
-                              <Edit2 size={14} /> Editar nome
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleConfirmEdit(alert.id)}
-                              className="flex-1 py-2 text-xs font-bold text-brand-purple bg-brand-purple/10 hover:bg-brand-purple/20 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                            >
-                              <Check size={14} /> Confirmar edição
-                            </button>
-                          )}
-
-                          {/* Ativar / Desativar */}
-                          <button
-                            onClick={() => handleToggleStatus(alert)}
-                            className={`flex-1 py-2 cursor-pointer text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
-                              isActive
-                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
-                                : 'text-green-600 bg-green-50 hover:bg-green-100'
-                            }`}
-                          >
-                            {isActive
-                              ? <><PowerOff size={14} /> Desativar</>
-                              : <><Power size={14} /> Ativar</>
-                            }
-                          </button>
-
-                          {/* Excluir */}
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(alert.id)}
-                            className="flex-1 py-2 cursor-pointer text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                          >
-                            <Trash2 size={14} /> Excluir
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {alert.nota && !isEditing && (
+                  <p className="text-[11px] text-gray-400 mt-0.5 italic truncate">{alert.nota}</p>
+                )}
               </div>
+
+              <span className={`shrink-0 px-2.5 py-0.5 text-[10px] font-medium rounded-full ${
+                isActive
+                  ? 'bg-green-50 text-green-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {isActive ? 'Ativo' : 'Pausado'}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2 flex-wrap">
+              {notificationActive && (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-red-50 border border-red-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                  <span className="text-[12px] font-semibold tracking-wider text-red-700 whitespace-nowrap">
+                    Alerta disparado - temperatura fora do limite
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 flex-row">
+              {alert.temperatura_min != null && (
+                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-blue-50">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-500">Mínima</span>
+                  <span className="text-sm font-semibold text-blue-800">{alert.temperatura_min}°C</span>
+                </div>
+              )}
+              {alert.temperatura_max != null && (
+                <div className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-red-50">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">Máxima</span>
+                  <span className="text-sm font-semibold text-red-800">{alert.temperatura_max}°C</span>
+                </div>
+              )}
+              </div>
+
+              {/* Horário — empurrado para a direita */}
+              
+            </div>
+
+            {/* Greenhouse tag */}
+            <div className='flex justify-around items-center mt-2'>
+            {alert.greenhouse?.name && (
+              <div className="inline-flex items-center gap-1 text-[12px] text-zinc-600">
+                <Leaf size={12} />
+                Ambiente: {alert.greenhouse.name}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 ml-auto">
+                {alert.hora_inicio && alert.hora_fim ? (
+                  <div className="flex items-start gap-1.5">
+                    <Clock size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 leading-none mb-0.5">Monitoramento</span>
+                      <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                        {formatTimeBRT(alert.hora_inicio)} às {formatTimeBRT(alert.hora_fim)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-1.5">
+                    <Clock size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 leading-none mb-0.5">Monitoramento</span>
+                      <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
+                        24 horas
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="flex border-t border-gray-100 bg-gray-50/60">
+            {!isEditing ? (
+              <button
+                onClick={() => startEditing(alert)}
+                className="flex-1 py-2 text-[11px] font-medium cursor-pointer text-gray-400 hover:text-brand-purple hover:bg-brand-purple/5 flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Edit2 size={13} /> Renomear
+              </button>
+            ) : (
+              <button
+                onClick={() => handleConfirmEdit(alert.id)}
+                className="flex-1 py-2 text-[11px] font-medium text-brand-purple hover:bg-brand-purple/10 flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Check size={13} /> Confirmar
+              </button>
+            )}
+
+            <div className="w-px bg-gray-100 my-1.5" />
+
+            <button
+              onClick={() => handleToggleStatus(alert)}
+              className={`flex-1 py-2 cursor-pointer text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                isActive
+                  ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50/60'
+                  : 'text-gray-400 hover:text-green-600 hover:bg-green-50/60'
+              }`}
+            >
+              {isActive
+                ? <><PowerOff size={13} /> Desativar</>
+                : <><Power size={13} /> Ativar</>}
+            </button>
+
+            <div className="w-px bg-gray-100 my-1.5" />
+
+            <button
+              type="button"
+              onClick={() => handleDelete(alert.id)}
+              className="flex-1 py-2 cursor-pointer text-[11px] font-medium text-gray-400 hover:text-red-600 hover:bg-red-50/60 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Trash2 size={13} /> Excluir
+            </button>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
             </motion.div>
           </div>
         )}

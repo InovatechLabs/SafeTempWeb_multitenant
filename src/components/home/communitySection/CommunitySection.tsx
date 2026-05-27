@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Zap } from 'lucide-react';
 import { useDashboard } from '../../../hooks/useDashboard';
+import { useAuth } from '../../../contexts/auth/authContext';
 
 const roles = ["estudantes.", "pesquisadores.", "gestores.", "professores.", "você."];
 
 const CommunitySection = () => {
+
+  const {activeGreenhouse} = useAuth();
+
   const [index, setIndex] = useState(0);
-  const { data, isLoading } = useDashboard();
+  const { data, isLoading } = useDashboard(activeGreenhouse?.id);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {

@@ -2,11 +2,9 @@ self.addEventListener('push', function(event) {
   console.log('[Service Worker] O evento de Push chegou!');
 
   if (event.data) {
-    console.log('[Service Worker] Dados recebidos puros:', event.data.text());
     
     try {
       const data = event.data.json();
-      console.log('[Service Worker] JSON parseado com sucesso:', data);
 
       const options = {
         body: data.body || 'Corpo da notificação não enviado.',
@@ -31,7 +29,6 @@ self.addEventListener('push', function(event) {
 });
 
 self.addEventListener('notificationclick', function(event) {
-  console.log('[Service Worker] Clicaram na notificação!');
   event.notification.close();
   event.waitUntil(
     clients.openWindow(event.notification.data.url)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../services/api'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -16,20 +16,25 @@ import formatToBR from '../../utils/formatters/formatDateToBR';
 import ReportsHero from '../../components/reports/ReportsHero';
 import ReportDataChart from '../../components/reports/ReportDataChart';
 import { useDashboard } from '../../hooks/useDashboard';
+import { useAuth } from '../../contexts/auth/authContext';
+import { useQuery } from '@tanstack/react-query';
 
 interface Report {
   id: number;
   chip_id: string;
   data: string;
   relatorio: string;
+  greenhouse: {
+    name: string;
+  };
   resumo: string; 
   criado_em: string;
 }
 
 const ReportsPage: React.FC = () => {
-  const [reports, setReports] = useState<Report[]>([]);
+  
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ inicio: '', fim: '' });
   const [searchDates, setSearchDates] = useState({ inicio: '', fim: '' });
   const [isDownloading, setIsDownloading] = useState({ pdf: false, csv: false, share: false });
   const [viewMode, setViewMode] = useState<"leitura" | "graphical">(() => {
@@ -37,46 +42,34 @@ const ReportsPage: React.FC = () => {
   return (savedMode === "graphical" || savedMode === "leitura") ? savedMode : "leitura";
 });
 
-  const { data } = useDashboard();
-  const record = data?.lastRecord;
+  const {activeGreenhouse} = useAuth();
+ const { data: reports = [], isLoading } = useQuery<Report[]>({
+  queryKey: ['reports', activeGreenhouse?.id, filters],
+  queryFn: async () => {
+    const endpoint = filters.inicio && filters.fim ? 'reports/interval' : 'reports/today';
+    const params = filters.inicio && filters.fim ? { inicio: filters.inicio, fim: filters.fim } : {};
+    const response = await api.get(endpoint, { params });
+    return response.data; 
+  },
+  enabled: !!activeGreenhouse?.id 
+});
+  const { data: dashboardData } = useDashboard(activeGreenhouse?.id);
 
-  useEffect(() => {
-    fetchTodayReports();
-  }, []);
+  const record = dashboardData?.lastRecord;
 
-  const fetchTodayReports = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('reports/today'); 
-      setReports(response.data);
-      if (response.data.length > 0) setSelectedReport(response.data[0]);
-    } catch (err) {
-      console.error("Erro ao carregar hoje:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const searchAbortRef = useRef<AbortController | null>(null);
+useEffect(() => {
+  if (reports && reports.length > 0) {
+    setSelectedReport(reports[0]);
+  } else {
+    setSelectedReport(null);
+  }
+}, [reports]);
 
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-     if (searchAbortRef.current) {
-    searchAbortRef.current.abort();
-  }
-  searchAbortRef.current = new AbortController();
-
-  setLoading(true);
-    try {
-      const response = await api.get(`reports/interval`, { params: searchDates, signal: searchAbortRef.current.signal });
-      setReports(response.data);
-    } catch (err: any) {
-      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
-      console.error("Erro na busca:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  
+  setFilters({ inicio: searchDates.inicio, fim: searchDates.fim });
+};
 
   const parseResumo = (jsonStr: string) => {
     try { return JSON.parse(jsonStr); } catch { return null; }
@@ -197,11 +190,11 @@ const handleShare = async (id: number) => {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 bg-brand-purple text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                  className="w-full py-3.5 cursor-pointer bg-brand-purple text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? <LuLoader size={16} className="animate-spin" /> : <LuSearch size={16} />}
-                  {loading ? 'Buscando...' : 'Pesquisar'}
+                  {isLoading ? <LuLoader size={16} className="animate-spin" /> : <LuSearch size={16} />}
+                  {isLoading ? 'Buscando...' : 'Pesquisar'}
                 </button>
               </form>
             </div>
@@ -210,7 +203,7 @@ const handleShare = async (id: number) => {
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-2">
                 {reports.length} Resultados encontrados
               </p>
-              {loading ? (
+              {isLoading ? (
                 <div className="text-center py-10 font-bold text-gray-300 animate-pulse">Buscando...</div>
               ) : (
               reports.map((report) => (
@@ -269,7 +262,7 @@ const handleShare = async (id: number) => {
           <div className="flex flex-col max-w-full px-2 gap-1 text-sm">
             <p><strong>ID Relatório:</strong> {selectedReport.id}</p>
             <p><strong>Gerado em:</strong> {formatToBR(selectedReport.criado_em)}</p>
-            <p><strong>Chip ID:</strong> {selectedReport.chip_id}</p>
+            <p><strong>Ambiente:</strong> {selectedReport.greenhouse.name}</p>
           </div>
 
           <div className="h-[1px] bg-[#e7e7e7] mb-6 md:mb-8 mt-5" />
